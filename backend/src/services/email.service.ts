@@ -38,7 +38,6 @@ export class EmailService {
       logger.info('SMTP Config', {
         host: config.smtp.host,
         port: config.smtp.port,
-        secure: config.smtp.secure,
         user: config.smtp.user,
         hasPassword: !!config.smtp.password,
         from: config.smtp.from,
@@ -51,17 +50,6 @@ export class EmailService {
         auth: {
           user: config.smtp.user,
           pass: config.smtp.password,
-        },
-        // Add timeout and connection options for cloud platforms
-        connectionTimeout: 10000, // 10 seconds
-        greetingTimeout: 10000,
-        socketTimeout: 10000,
-        // Force TLS if not using secure
-        requireTLS: !config.smtp.secure,
-        // Additional options for better compatibility
-        tls: {
-          rejectUnauthorized: false, // Allow self-signed certificates
-          minVersion: 'TLSv1.2',
         },
       });
 

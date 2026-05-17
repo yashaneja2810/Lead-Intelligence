@@ -19,6 +19,13 @@
 - [How It Works](#-how-it-works) — Step-by-step workflow
 - [Deployment](#-deployment) — Production setup
 - [Troubleshooting](#-troubleshooting) — Common issues & fixes
+ - [Setup](./SETUP.md) — Local setup and environment variables
+ - [API Docs](./API_DOCS.md) — HTTP endpoints and request schema
+ - [Assumptions](./ASSUMPTIONS.md) — Implementation assumptions
+ - [Tradeoffs](./TRADEOFFS.md) — Design tradeoffs and rationale
+ - [Security](./SECURITY.md) — Data handling and best practices
+ - [Testing](./TESTING.md) — How to validate behavior and run tests
+ - [Submission](./SUBMISSION.md) — Assessment summary & demo notes
 
 ---
 

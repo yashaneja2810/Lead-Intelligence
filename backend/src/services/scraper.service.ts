@@ -3,6 +3,8 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { ScrapedData } from '../types';
 import logger from '../utils/logger';
+import fs from 'fs/promises';
+import path from 'path';
 
 /**
  * ScraperService
@@ -45,8 +47,18 @@ export class ScraperService {
   private browser: Browser | null = null;
   private readonly maxRetries = 3;
   private readonly timeout = 30000;  // 30 seconds before fallback
+  private readonly screenshotsDir = path.join(process.cwd(), 'screenshots');
 
   constructor() {
+    this.ensureScreenshotsDir();
+  }
+
+  private async ensureScreenshotsDir() {
+    try {
+      await fs.mkdir(this.screenshotsDir, { recursive: true });
+    } catch (error) {
+      logger.error('Failed to create screenshots directory', { error });
+    }
   }
 
   /**
@@ -68,6 +80,15 @@ export class ScraperService {
       return `https://${url}`;
     }
     return url;
+  }
+
+  private extractDomain(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname;
+    } catch {
+      return url;
+    }
   }
 
   private cleanText(text: string): string {
@@ -110,14 +131,14 @@ export class ScraperService {
       logger.info(`Scraping with Playwright (FIXED VERSION): ${url}`);
       
       await page.goto(url, { 
-        waitUntil: 'domcontentloaded',
+        waitUntil: 'networkidle',
         timeout: this.timeout 
       });
 
       // Wait for content to load
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(2000);
 
-      const data = (await page.evaluate(`(() => {
+      const data = await page.evaluate(`(() => {
         const getText = (selector) => Array.from(document.querySelectorAll(selector))
           .map((el) => el.textContent?.trim() || '')
           .filter((text) => text.length > 0);
@@ -177,7 +198,26 @@ export class ScraperService {
             document.querySelector('[class*="mobile"]')
           ),
         };
-      })()`)) as Partial<ScrapedData>;
+      })()`);
+
+      // Capture screenshots
+      const timestamp = Date.now();
+      const domain = this.extractDomain(url).replace(/\./g, '_');
+      
+      const fullPagePath = path.join(this.screenshotsDir, `${domain}_${timestamp}_full.png`);
+      const heroPath = path.join(this.screenshotsDir, `${domain}_${timestamp}_hero.png`);
+
+      await page.screenshot({ 
+        path: fullPagePath, 
+        fullPage: true,
+        timeout: 10000 
+      });
+
+      await page.screenshot({ 
+        path: heroPath,
+        clip: { x: 0, y: 0, width: 1920, height: 1080 },
+        timeout: 10000
+      });
 
       // Detect tech stack
       const techStack = await this.detectTechStack(page);
@@ -192,11 +232,15 @@ export class ScraperService {
             return null;
           }
         }).filter(Boolean);
-      })()`) as any[];
+      })()`);
 
       return {
         ...data,
         url,
+        screenshots: {
+          fullPage: fullPagePath,
+          hero: heroPath,
+        },
         techStack,
         structuredData,
       };
@@ -285,6 +329,7 @@ export class ScraperService {
         pricingContent: getText('[class*="pricing"], [class*="price"]').slice(0, 20),
         techStack: [],
         structuredData: [],
+        screenshots: {},
         isMobileResponsive: $('meta[name="viewport"]').length > 0,
       };
     } catch (error) {
@@ -384,6 +429,7 @@ export class ScraperService {
       metaTags: scrapedData.metaTags || {},
       ogTags: scrapedData.ogTags || {},
       structuredData: scrapedData.structuredData || [],
+      screenshots: scrapedData.screenshots || {},
       internalLinks: this.deduplicateArray(scrapedData.internalLinks || []),
       hasChat: scrapedData.hasChat || false,
       hasBlog: scrapedData.hasBlog || false,

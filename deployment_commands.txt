@@ -22,7 +22,7 @@ Service Type: Web Service (Node.js)
 Root Directory: backend
 
 Build Settings:
-- Build Command: npm install && npm run build && npx playwright install --with-deps chromium
+- Build Command: npm install --include=dev && npm run build && npx playwright install chromium
 - Start Command: npm start
 
 Environment Variables (Add these in Render settings):

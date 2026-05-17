@@ -8,7 +8,7 @@ import {
 
 export class GroqProvider {
   private client: Groq;
-  private model = 'llama-3.3-70b-versatile';
+  private model = 'llama-3.1-8b-instant';
 
   constructor() {
     this.client = new Groq({

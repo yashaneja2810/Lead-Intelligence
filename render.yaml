@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: lead-enrichment-backend
+    env: node
+    rootDir: backend
+    buildCommand: "npm install && npm run build && npx playwright install --with-deps chromium"
+    startCommand: "npm start"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: FRONTEND_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SMTP_HOST
+        value: "smtp.gmail.com"
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_FROM_NAME
+        value: "Simplifi-IQ Assessment"
+      - key: ENABLE_GOOGLE_INTEGRATIONS
+        value: "false"
+      - key: GOOGLE_SHEETS_CREDENTIALS
+        sync: false
+      - key: GOOGLE_SHEETS_SPREADSHEET_ID
+        sync: false
+      - key: GOOGLE_DRIVE_FOLDER_ID
+        sync: false

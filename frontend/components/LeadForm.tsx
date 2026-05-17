@@ -41,7 +41,7 @@ const initialFormData: LeadFormData = {
   websiteUrl: '',
   industry: '',
   additionalNotes: '',
-  aiProvider: 'gemini',
+  aiProvider: 'groq',
 };
 
 export default function LeadForm() {
@@ -129,42 +129,8 @@ export default function LeadForm() {
           </p>
         </motion.div>
 
-        <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="space-y-6">
-            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_16px_45px_rgba(15,23,42,0.06)]">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                <Database className="h-4 w-4 text-sky-600" />
-                Operational overview
-              </div>
-              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">
-                Built for sales teams that need a premium first touch.
-              </h3>
-              <p className="mt-4 text-sm leading-7 text-slate-600">
-                The workflow is structured to feel like a real internal operations tool, with clear progress, credible system language, and an output that looks ready for a client-facing handoff.
-              </p>
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {[
-                  { icon: Search, title: 'Public research', text: 'Website and contextual scraping' },
-                  { icon: FileText, title: 'Polished report', text: 'Executive PDF with recommendations' },
-                  { icon: Mail, title: 'Automatic email', text: 'Direct delivery to the prospect' },
-                  { icon: Database, title: 'Internal logging', text: 'Sheets and Drive archive support' },
-                ].map((item) => (
-                  <div key={item.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700">
-                        <item.icon className="h-4.5 w-4.5" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-slate-950">{item.title}</div>
-                        <div className="mt-1 text-sm text-slate-600">{item.text}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
+        <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+          <div className="space-y-6 flex flex-col justify-start">
             <WorkflowTracker statuses={workflowStatuses} companyName={formData.companyName} isLive={isSubmitting} />
           </div>
 
@@ -185,27 +151,6 @@ export default function LeadForm() {
                   onSubmit={handleSubmit}
                   className="space-y-6 p-7 md:p-8"
                 >
-                  <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                    <div>
-                      <div className="text-sm font-semibold text-slate-950">AI engine</div>
-                      <div className="mt-1 text-sm text-slate-600">
-                        {formData.aiProvider === 'gemini'
-                          ? 'Gemini for deeper structured analysis'
-                          : 'Groq for lower-latency generation'}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${formData.aiProvider === 'gemini' ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-500'}`}>Gemini</span>
-                      <Switch
-                        checked={formData.aiProvider === 'groq'}
-                        onCheckedChange={(checked) =>
-                          setFormData({ ...formData, aiProvider: checked ? 'groq' : 'gemini' })
-                        }
-                      />
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${formData.aiProvider === 'groq' ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-500'}`}>Groq</span>
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <div>
                       <Label htmlFor="name" className="text-slate-700">Full name *</Label>
@@ -386,6 +331,46 @@ export default function LeadForm() {
             </AnimatePresence>
           </motion.div>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mt-8 rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_16px_45px_rgba(15,23,42,0.06)]"
+        >
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <Database className="h-4 w-4 text-sky-600" />
+            Operational overview
+          </div>
+          <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">
+            Built for sales teams that need a premium first touch.
+          </h3>
+          <p className="mt-4 text-sm leading-7 text-slate-600">
+            The workflow is structured to feel like a real internal operations tool, with clear progress, credible system language, and an output that looks ready for a client-facing handoff.
+          </p>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: Search, title: 'Public research', text: 'Website and contextual scraping' },
+              { icon: FileText, title: 'Polished report', text: 'Executive PDF with recommendations' },
+              { icon: Mail, title: 'Automatic email', text: 'Direct delivery to the prospect' },
+              { icon: Database, title: 'Internal logging', text: 'Sheets and Drive archive support' },
+            ].map((item) => (
+              <div key={item.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700">
+                    <item.icon className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-slate-950">{item.title}</div>
+                    <div className="mt-1 text-sm text-slate-600">{item.text}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   );

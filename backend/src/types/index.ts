@@ -21,10 +21,6 @@ export interface ScrapedData {
   metaTags: Record<string, string>;
   ogTags: Record<string, string>;
   structuredData: any[];
-  screenshots: {
-    fullPage?: string;
-    hero?: string;
-  };
   internalLinks: string[];
   hasChat: boolean;
   hasBlog: boolean;

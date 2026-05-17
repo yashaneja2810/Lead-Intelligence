@@ -47,18 +47,8 @@ export class ScraperService {
   private browser: Browser | null = null;
   private readonly maxRetries = 3;
   private readonly timeout = 30000;  // 30 seconds before fallback
-  private readonly screenshotsDir = path.join(process.cwd(), 'screenshots');
 
   constructor() {
-    this.ensureScreenshotsDir();
-  }
-
-  private async ensureScreenshotsDir() {
-    try {
-      await fs.mkdir(this.screenshotsDir, { recursive: true });
-    } catch (error) {
-      logger.error('Failed to create screenshots directory', { error });
-    }
   }
 
   /**
@@ -131,12 +121,12 @@ export class ScraperService {
       logger.info(`Scraping with Playwright (FIXED VERSION): ${url}`);
       
       await page.goto(url, { 
-        waitUntil: 'networkidle',
+        waitUntil: 'domcontentloaded',
         timeout: this.timeout 
       });
 
       // Wait for content to load
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(500);
 
       const data = (await page.evaluate(`(() => {
         const getText = (selector) => Array.from(document.querySelectorAll(selector))
@@ -200,25 +190,6 @@ export class ScraperService {
         };
       })()`)) as Partial<ScrapedData>;
 
-      // Capture screenshots
-      const timestamp = Date.now();
-      const domain = this.extractDomain(url).replace(/\./g, '_');
-      
-      const fullPagePath = path.join(this.screenshotsDir, `${domain}_${timestamp}_full.png`);
-      const heroPath = path.join(this.screenshotsDir, `${domain}_${timestamp}_hero.png`);
-
-      await page.screenshot({ 
-        path: fullPagePath, 
-        fullPage: true,
-        timeout: 10000 
-      });
-
-      await page.screenshot({ 
-        path: heroPath,
-        clip: { x: 0, y: 0, width: 1920, height: 1080 },
-        timeout: 10000
-      });
-
       // Detect tech stack
       const techStack = await this.detectTechStack(page);
 
@@ -237,10 +208,6 @@ export class ScraperService {
       return {
         ...data,
         url,
-        screenshots: {
-          fullPage: fullPagePath,
-          hero: heroPath,
-        },
         techStack,
         structuredData,
       };
@@ -429,7 +396,6 @@ export class ScraperService {
       metaTags: scrapedData.metaTags || {},
       ogTags: scrapedData.ogTags || {},
       structuredData: scrapedData.structuredData || [],
-      screenshots: scrapedData.screenshots || {},
       internalLinks: this.deduplicateArray(scrapedData.internalLinks || []),
       hasChat: scrapedData.hasChat || false,
       hasBlog: scrapedData.hasBlog || false,

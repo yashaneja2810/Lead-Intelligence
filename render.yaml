@@ -3,9 +3,13 @@ services:
     name: lead-enrichment-backend
     env: node
     rootDir: backend
-    buildCommand: "npm install --include=dev && npm run build && npx playwright install chromium"
+    buildCommand: "npm install --include=dev && npm run build && npx playwright install chromium && npx puppeteer browsers install chrome"
     startCommand: "npm start"
     envVars:
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: "0"
+      - key: PUPPETEER_CACHE_DIR
+        value: "/opt/render/project/src/backend/.cache"
       - key: NODE_ENV
         value: production
       - key: PORT

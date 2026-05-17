@@ -3,8 +3,6 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { ScrapedData } from '../types';
 import logger from '../utils/logger';
-import fs from 'fs/promises';
-import path from 'path';
 
 /**
  * ScraperService
@@ -70,15 +68,6 @@ export class ScraperService {
       return `https://${url}`;
     }
     return url;
-  }
-
-  private extractDomain(url: string): string {
-    try {
-      const urlObj = new URL(url);
-      return urlObj.hostname;
-    } catch {
-      return url;
-    }
   }
 
   private cleanText(text: string): string {
@@ -296,7 +285,6 @@ export class ScraperService {
         pricingContent: getText('[class*="pricing"], [class*="price"]').slice(0, 20),
         techStack: [],
         structuredData: [],
-        screenshots: {},
         isMobileResponsive: $('meta[name="viewport"]').length > 0,
       };
     } catch (error) {

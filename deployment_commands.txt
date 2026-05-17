@@ -38,8 +38,8 @@ Environment Variables (Add these in Render settings):
 
 # SMTP Config (For sending finalized reports)
 - SMTP_HOST: <smtp.gmail.com or your preferred host>
-- SMTP_PORT: 587
-- SMTP_SECURE: false
+- SMTP_PORT: 465
+- SMTP_SECURE: true
 - SMTP_USER: <Your email address>
 - SMTP_PASSWORD: <Your app password>
 - EMAIL_FROM: <Your email address>

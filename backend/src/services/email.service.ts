@@ -38,6 +38,7 @@ export class EmailService {
       logger.info('SMTP Config', {
         host: config.smtp.host,
         port: config.smtp.port,
+        secure: config.smtp.secure,
         user: config.smtp.user,
         hasPassword: !!config.smtp.password,
         from: config.smtp.from,

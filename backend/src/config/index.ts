@@ -19,8 +19,8 @@ export const config = {
   
   smtp: {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
+    port: parseInt(process.env.SMTP_PORT || '465'),
+    secure: process.env.SMTP_SECURE === 'true' || parseInt(process.env.SMTP_PORT || '465') === 465,
     user: process.env.SMTP_USER || '',
     password: process.env.SMTP_PASS || process.env.SMTP_PASSWORD || '',
     from: process.env.EMAIL_FROM || '',

@@ -29,13 +29,6 @@ export const submitLeadWithStatus = async (
   onStatus: (status: WorkflowStatus) => void
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
-    const eventSource = new EventSource(
-      `${API_URL}/api/leads/submit-with-status?${new URLSearchParams(data as any)}`
-    );
-
-    // For POST with SSE, we need to use fetch with EventSource polyfill
-    // or handle it differently. Let's use a simpler approach:
-    
     fetch(`${API_URL}/api/leads/submit-with-status`, {
       method: 'POST',
       headers: {
@@ -43,6 +36,23 @@ export const submitLeadWithStatus = async (
       },
       body: JSON.stringify(data),
     }).then(async (response) => {
+      if (!response.ok) {
+        let message = 'Unable to start workflow';
+
+        try {
+          const errorPayload = await response.json();
+          message = errorPayload?.message || message;
+        } catch {
+          const text = await response.text();
+          if (text) {
+            message = text;
+          }
+        }
+
+        reject(new Error(message));
+        return;
+      }
+
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
 
@@ -51,31 +61,64 @@ export const submitLeadWithStatus = async (
         return;
       }
 
+      let buffer = '';
+
+      const flushBuffer = () => {
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || '';
+
+        for (const event of events) {
+          const line = event
+            .split('\n')
+            .find((entry) => entry.startsWith('data: '));
+
+          if (!line) {
+            continue;
+          }
+
+          try {
+            const parsed = JSON.parse(line.slice(6));
+            onStatus(parsed);
+
+            if (parsed.step === 'completed' || parsed.step === 'error') {
+              resolve();
+              return true;
+            }
+          } catch (error) {
+            console.error('Failed to parse SSE data', error);
+          }
+        }
+
+        return false;
+      };
+
       while (true) {
         const { done, value } = await reader.read();
         
         if (done) {
+          if (buffer.trim()) {
+            const line = buffer
+              .split('\n')
+              .find((entry) => entry.startsWith('data: '));
+
+            if (line) {
+              try {
+                const parsed = JSON.parse(line.slice(6));
+                onStatus(parsed);
+              } catch (error) {
+                console.error('Failed to parse SSE data', error);
+              }
+            }
+          }
+
           resolve();
           break;
         }
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        buffer += decoder.decode(value, { stream: true });
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              onStatus(data);
-              
-              if (data.step === 'completed' || data.step === 'error') {
-                resolve();
-                return;
-              }
-            } catch (e) {
-              console.error('Failed to parse SSE data', e);
-            }
-          }
+        if (flushBuffer()) {
+          return;
         }
       }
     }).catch(reject);

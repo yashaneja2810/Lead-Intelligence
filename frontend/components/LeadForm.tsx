@@ -7,14 +7,18 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Switch } from './ui/switch';
+import WorkflowTracker from './WorkflowTracker';
 import { submitLeadWithStatus, type LeadFormData, type WorkflowStatus } from '@/lib/api';
-import { 
-  Loader2, 
-  CheckCircle2, 
-  XCircle, 
-  Sparkles,
+import {
+  Loader2,
+  CheckCircle2,
+  XCircle,
   Brain,
-  Zap
+  ShieldCheck,
+  Search,
+  FileText,
+  Mail,
+  Database,
 } from 'lucide-react';
 
 const industries = [
@@ -30,31 +34,40 @@ const industries = [
   'Other',
 ];
 
-const workflowSteps = [
-  { key: 'validation', label: 'Validating' },
-  { key: 'scraping', label: 'Analyzing Website' },
-  { key: 'ai-analysis', label: 'AI Processing' },
-  { key: 'pdf-generation', label: 'Creating Report' },
-  { key: 'drive-upload', label: 'Archiving' },
-  { key: 'sheets-logging', label: 'Logging Data' },
-  { key: 'email-delivery', label: 'Sending Email' },
-];
+const initialFormData: LeadFormData = {
+  name: '',
+  email: '',
+  companyName: '',
+  websiteUrl: '',
+  industry: '',
+  additionalNotes: '',
+  aiProvider: 'gemini',
+};
 
 export default function LeadForm() {
-  const [formData, setFormData] = useState<LeadFormData>({
-    name: '',
-    email: '',
-    companyName: '',
-    websiteUrl: '',
-    industry: '',
-    additionalNotes: '',
-    aiProvider: 'gemini',
-  });
-
+  const [formData, setFormData] = useState<LeadFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [workflowStatuses, setWorkflowStatuses] = useState<WorkflowStatus[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const resetForm = () => {
+    setIsComplete(false);
+    setWorkflowStatuses([]);
+    setFormData(initialFormData);
+  };
+
+  const getErrorMessage = (value: unknown) => {
+    if (value instanceof Error) {
+      return value.message;
+    }
+
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    return 'An error occurred. Please try again.';
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,326 +79,313 @@ export default function LeadForm() {
     try {
       await submitLeadWithStatus(formData, (status) => {
         setWorkflowStatuses((prev) => {
-          const existing = prev.findIndex((s) => s.step === status.step);
+          const existing = prev.findIndex((item) => item.step === status.step);
+
           if (existing >= 0) {
             const updated = [...prev];
             updated[existing] = status;
             return updated;
           }
+
           return [...prev, status];
         });
 
         if (status.step === 'completed') {
           setIsComplete(true);
           setIsSubmitting(false);
-        } else if (status.step === 'error') {
+        }
+
+        if (status.step === 'error') {
           setError(status.message);
           setIsSubmitting(false);
         }
       });
-    } catch (err: any) {
-      setError(err.message || 'An error occurred. Please try again.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
+    } finally {
       setIsSubmitting(false);
     }
   };
 
-  const getStepStatus = (stepKey: string) => {
-    const status = workflowStatuses.find((s) => s.step === stepKey);
-    return status?.status || 'pending';
-  };
-
-  const getStepMessage = (stepKey: string) => {
-    const status = workflowStatuses.find((s) => s.step === stepKey);
-    return status?.message || '';
-  };
-
   return (
-    <section id="form" className="py-24 bg-gradient-to-br from-slate-50 to-purple-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="form" className="border-t border-slate-200 bg-[#f4f7fb] py-24 text-slate-900">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="mx-auto mb-14 max-w-3xl text-center"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Get Your Free AI Audit
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <ShieldCheck className="h-4 w-4 text-sky-600" />
+            Controlled automation
+          </div>
+          <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
+            Request a fully automated audit package.
           </h2>
-          <p className="text-xl text-gray-600">
-            Submit your information and receive a comprehensive business analysis in minutes
+          <p className="mt-4 text-lg leading-8 text-slate-600">
+            The platform validates the lead, enriches the company, generates the report, archives the PDF, logs the lead, and emails the result in one continuous flow.
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-2xl p-8 md:p-12"
-        >
-          <AnimatePresence mode="wait">
-            {!isSubmitting && !isComplete && !error && (
-              <motion.form
-                key="form"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onSubmit={handleSubmit}
-                className="space-y-6"
-              >
-                {/* AI Provider Toggle */}
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200">
-                  <div className="flex items-center gap-3">
-                    {formData.aiProvider === 'gemini' ? (
-                      <Sparkles className="w-5 h-5 text-purple-600" />
-                    ) : (
-                      <Zap className="w-5 h-5 text-blue-600" />
-                    )}
-                    <div>
-                      <div className="font-semibold text-gray-900">
-                        AI Provider: {formData.aiProvider === 'gemini' ? 'Gemini' : 'Groq'}
+        <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="space-y-6">
+            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_16px_45px_rgba(15,23,42,0.06)]">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <Database className="h-4 w-4 text-sky-600" />
+                Operational overview
+              </div>
+              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">
+                Built for sales teams that need a premium first touch.
+              </h3>
+              <p className="mt-4 text-sm leading-7 text-slate-600">
+                The workflow is structured to feel like a real internal operations tool, with clear progress, credible system language, and an output that looks ready for a client-facing handoff.
+              </p>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {[
+                  { icon: Search, title: 'Public research', text: 'Website and contextual scraping' },
+                  { icon: FileText, title: 'Polished report', text: 'Executive PDF with recommendations' },
+                  { icon: Mail, title: 'Automatic email', text: 'Direct delivery to the prospect' },
+                  { icon: Database, title: 'Internal logging', text: 'Sheets and Drive archive support' },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700">
+                        <item.icon className="h-4.5 w-4.5" />
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {formData.aiProvider === 'gemini' 
-                          ? 'Google\'s advanced AI model' 
-                          : 'Ultra-fast inference engine'}
+                      <div>
+                        <div className="text-sm font-semibold text-slate-950">{item.title}</div>
+                        <div className="mt-1 text-sm text-slate-600">{item.text}</div>
                       </div>
                     </div>
                   </div>
-                  <Switch
-                    checked={formData.aiProvider === 'groq'}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, aiProvider: checked ? 'groq' : 'gemini' })
-                    }
-                  />
-                </div>
+                ))}
+              </div>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="name">Full Name *</Label>
-                    <Input
-                      id="name"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="John Doe"
-                      className="mt-2"
-                    />
-                  </div>
+            <WorkflowTracker statuses={workflowStatuses} companyName={formData.companyName} isLive={isSubmitting} />
+          </div>
 
-                  <div>
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="john@company.com"
-                      className="mt-2"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="companyName">Company Name *</Label>
-                    <Input
-                      id="companyName"
-                      required
-                      value={formData.companyName}
-                      onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                      placeholder="Acme Inc."
-                      className="mt-2"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="industry">Industry *</Label>
-                    <select
-                      id="industry"
-                      required
-                      value={formData.industry}
-                      onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                      className="mt-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      <option value="">Select industry</option>
-                      {industries.map((industry) => (
-                        <option key={industry} value={industry}>
-                          {industry}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="websiteUrl">Website URL *</Label>
-                  <Input
-                    id="websiteUrl"
-                    type="url"
-                    required
-                    value={formData.websiteUrl}
-                    onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                    placeholder="https://example.com"
-                    className="mt-2"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="additionalNotes">Additional Notes (Optional)</Label>
-                  <Textarea
-                    id="additionalNotes"
-                    value={formData.additionalNotes}
-                    onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
-                    placeholder="Any specific areas you'd like us to focus on?"
-                    className="mt-2"
-                    rows={4}
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-6 text-lg"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)]"
+          >
+            <AnimatePresence mode="wait">
+              {!isSubmitting && !isComplete && !error && (
+                <motion.form
+                  key="form"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  onSubmit={handleSubmit}
+                  className="space-y-6 p-7 md:p-8"
                 >
-                  <Brain className="w-5 h-5 mr-2" />
-                  Generate AI Audit Report
-                </Button>
-
-                <p className="text-sm text-gray-500 text-center">
-                  Your report will be generated and emailed to you within minutes
-                </p>
-              </motion.form>
-            )}
-
-            {isSubmitting && (
-              <motion.div
-                key="processing"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                <div className="text-center mb-8">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full mb-4">
-                    <Loader2 className="w-8 h-8 text-white animate-spin" />
+                  <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                    <div>
+                      <div className="text-sm font-semibold text-slate-950">AI engine</div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        {formData.aiProvider === 'gemini'
+                          ? 'Gemini for deeper structured analysis'
+                          : 'Groq for lower-latency generation'}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${formData.aiProvider === 'gemini' ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-500'}`}>Gemini</span>
+                      <Switch
+                        checked={formData.aiProvider === 'groq'}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, aiProvider: checked ? 'groq' : 'gemini' })
+                        }
+                      />
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${formData.aiProvider === 'groq' ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-500'}`}>Groq</span>
+                    </div>
                   </div>
-                  <h3 className="text-2xl font-bold mb-2">Processing Your Request</h3>
-                  <p className="text-gray-600">
-                    Our AI agents are analyzing {formData.companyName}...
-                  </p>
-                </div>
 
-                <div className="space-y-4">
-                  {workflowSteps.map((step, index) => {
-                    const status = getStepStatus(step.key);
-                    const message = getStepMessage(step.key);
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <div>
+                      <Label htmlFor="name" className="text-slate-700">Full name *</Label>
+                      <Input
+                        id="name"
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="John Doe"
+                        className="mt-2 h-11 border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus-visible:ring-sky-500"
+                      />
+                    </div>
 
-                    return (
-                      <motion.div
-                        key={step.key}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="flex items-center gap-4 p-4 rounded-lg bg-gray-50"
+                    <div>
+                      <Label htmlFor="email" className="text-slate-700">Work email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="john@company.com"
+                        className="mt-2 h-11 border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus-visible:ring-sky-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <div>
+                      <Label htmlFor="companyName" className="text-slate-700">Company name *</Label>
+                      <Input
+                        id="companyName"
+                        required
+                        value={formData.companyName}
+                        onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                        placeholder="Acme Inc."
+                        className="mt-2 h-11 border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus-visible:ring-sky-500"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="industry" className="text-slate-700">Industry *</Label>
+                      <select
+                        id="industry"
+                        required
+                        value={formData.industry}
+                        onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                        className="mt-2 flex h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20"
                       >
-                        <div className="flex-shrink-0">
-                          {status === 'completed' && (
-                            <CheckCircle2 className="w-6 h-6 text-green-500" />
-                          )}
-                          {status === 'in-progress' && (
-                            <Loader2 className="w-6 h-6 text-purple-500 animate-spin" />
-                          )}
-                          {status === 'failed' && (
-                            <XCircle className="w-6 h-6 text-red-500" />
-                          )}
-                          {status === 'pending' && (
-                            <div className="w-6 h-6 rounded-full border-2 border-gray-300" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-900">{step.label}</div>
-                          {message && (
-                            <div className="text-sm text-gray-600">{message}</div>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
+                        <option value="">Select industry</option>
+                        {industries.map((industry) => (
+                          <option key={industry} value={industry}>
+                            {industry}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
-            {isComplete && (
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-center py-12"
-              >
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full mb-6">
-                  <CheckCircle2 className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-3xl font-bold mb-4">Report Sent Successfully!</h3>
-                <p className="text-xl text-gray-600 mb-8">
-                  Check your inbox at <strong>{formData.email}</strong>
-                </p>
-                <p className="text-gray-600 mb-8">
-                  Your comprehensive AI-powered business audit has been generated and sent to your email. 
-                  The report includes personalized insights, strategic recommendations, and actionable quick wins.
-                </p>
-                <Button
-                  onClick={() => {
-                    setIsComplete(false);
-                    setWorkflowStatuses([]);
-                    setFormData({
-                      name: '',
-                      email: '',
-                      companyName: '',
-                      websiteUrl: '',
-                      industry: '',
-                      additionalNotes: '',
-                      aiProvider: 'gemini',
-                    });
-                  }}
-                  size="lg"
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                >
-                  Submit Another Request
-                </Button>
-              </motion.div>
-            )}
+                  <div>
+                    <Label htmlFor="websiteUrl" className="text-slate-700">Website URL *</Label>
+                    <Input
+                      id="websiteUrl"
+                      type="url"
+                      required
+                      value={formData.websiteUrl}
+                      onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+                      placeholder="https://example.com"
+                      className="mt-2 h-11 border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus-visible:ring-sky-500"
+                    />
+                  </div>
 
-            {error && (
-              <motion.div
-                key="error"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-center py-12"
-              >
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-400 to-red-600 rounded-full mb-6">
-                  <XCircle className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-3xl font-bold mb-4">Something Went Wrong</h3>
-                <p className="text-xl text-gray-600 mb-8">{error}</p>
-                <Button
-                  onClick={() => {
-                    setError(null);
-                    setWorkflowStatuses([]);
-                  }}
-                  size="lg"
-                  variant="outline"
+                  <div>
+                    <Label htmlFor="additionalNotes" className="text-slate-700">Additional context</Label>
+                    <Textarea
+                      id="additionalNotes"
+                      value={formData.additionalNotes}
+                      onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
+                      placeholder="Any priorities, audience nuances, or positioning details we should reflect?"
+                      className="mt-2 min-h-[120px] border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus-visible:ring-sky-500"
+                      rows={4}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="h-12 w-full rounded-xl bg-sky-600 text-sm font-semibold text-white shadow-lg shadow-sky-600/20 transition hover:bg-sky-500"
+                  >
+                    <Brain className="mr-2 h-4.5 w-4.5" />
+                    Generate report
+                  </Button>
+
+                  <p className="text-center text-sm text-slate-500">
+                    The workflow runs without human intervention and the PDF/email output remains unchanged.
+                  </p>
+                </motion.form>
+              )}
+
+              {isSubmitting && (
+                <motion.div
+                  key="processing"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="space-y-6 p-7 md:p-8"
                 >
-                  Try Again
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+                  <div className="rounded-3xl border border-slate-200 bg-slate-50 px-6 py-6 text-center">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-sky-200 bg-sky-50 text-sky-600">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                    <h3 className="text-2xl font-semibold tracking-tight text-slate-950">Workflow in progress</h3>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      The backend is processing {formData.companyName || 'the submission'} step by step. Live updates appear on the left as each stage completes.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {isComplete && (
+                <motion.div
+                  key="success"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="p-7 md:p-8"
+                >
+                  <div className="rounded-[1.75rem] border border-emerald-200 bg-emerald-50 px-6 py-8 text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-200 bg-white text-emerald-600">
+                      <CheckCircle2 className="h-8 w-8" />
+                    </div>
+                    <h3 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">Report delivered</h3>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      Check your inbox at <span className="font-semibold text-slate-900">{formData.email}</span> for the generated audit.
+                    </p>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      The PDF was generated, the email was sent, and the workflow completed with no manual touchpoint.
+                    </p>
+                    <Button
+                      onClick={resetForm}
+                      size="lg"
+                      className="mt-6 h-11 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800"
+                    >
+                      Submit another request
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {error && (
+                <motion.div
+                  key="error"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="p-7 md:p-8"
+                >
+                  <div className="rounded-[1.75rem] border border-rose-200 bg-rose-50 px-6 py-8 text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-rose-200 bg-white text-rose-600">
+                      <XCircle className="h-8 w-8" />
+                    </div>
+                    <h3 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">Workflow interrupted</h3>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">{error}</p>
+                    <Button
+                      onClick={() => {
+                        setError(null);
+                        setWorkflowStatuses([]);
+                      }}
+                      size="lg"
+                      variant="outline"
+                      className="mt-6 h-11 rounded-xl border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                    >
+                      Try again
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

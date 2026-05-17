@@ -4,26 +4,25 @@ import LeadForm from '@/components/LeadForm';
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-[#0b1220] text-slate-100">
       <Hero />
       <Features />
       <LeadForm />
       
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold mb-4 gradient-text">
-              AI Lead Enrichment Platform
-            </h3>
-            <p className="text-gray-400 mb-6">
-              Powered by advanced AI technology including Gemini, Groq, and multi-agent analysis
+      <footer className="border-t border-white/10 bg-[#07111f] text-slate-300">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+          <div>
+            <div className="text-base font-semibold text-white">SimplifIQ Lead Intelligence</div>
+            <p className="mt-2 max-w-xl text-sm text-slate-400">
+              Automated lead enrichment, report generation, and delivery for teams that want a polished first touch without manual ops overhead.
             </p>
-            <div className="flex justify-center gap-8 text-sm text-gray-400">
-              <span>© 2024 All rights reserved</span>
-              <span>•</span>
-              <span>Built for Simplifi-IQ Assessment</span>
-            </div>
+          </div>
+          <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+            <span>Built for the SimplifIQ assessment</span>
+            <span>•</span>
+            <span>Enterprise workflow automation</span>
+            <span>•</span>
+            <span>PDF and email output unchanged</span>
           </div>
         </div>
       </footer>

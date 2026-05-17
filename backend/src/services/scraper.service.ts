@@ -138,7 +138,7 @@ export class ScraperService {
       // Wait for content to load
       await page.waitForTimeout(2000);
 
-      const data = await page.evaluate(`(() => {
+      const data = (await page.evaluate(`(() => {
         const getText = (selector) => Array.from(document.querySelectorAll(selector))
           .map((el) => el.textContent?.trim() || '')
           .filter((text) => text.length > 0);
@@ -198,7 +198,7 @@ export class ScraperService {
             document.querySelector('[class*="mobile"]')
           ),
         };
-      })()`);
+      })()`)) as Partial<ScrapedData>;
 
       // Capture screenshots
       const timestamp = Date.now();

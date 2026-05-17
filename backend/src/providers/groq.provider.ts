@@ -3,12 +3,6 @@ import { AIInsights, ScrapedData, LeadFormData } from '../types';
 import { config } from '../config';
 import logger from '../utils/logger';
 import {
-  RESEARCH_AGENT_PROMPT,
-  BUSINESS_ANALYST_PROMPT,
-  SEO_AGENT_PROMPT,
-  UX_CRITIC_PROMPT,
-  AI_CONSULTANT_PROMPT,
-  REPORT_COMPOSER_PROMPT,
   buildContextPrompt,
 } from '../prompts/agents';
 

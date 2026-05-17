@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Manrope } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const manrope = Manrope({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'AI Lead Enrichment - Transform Your Business Intelligence',
-  description: 'AI-powered lead enrichment and automated business audit platform. Get personalized insights, SEO analysis, and strategic recommendations.',
-  keywords: 'AI, lead enrichment, business audit, SEO analysis, automation',
+  title: 'SimplifIQ | Automated Lead Intelligence Platform',
+  description: 'Enterprise-grade lead enrichment, report generation, and automated follow-up for high-intent inbound prospects.',
+  keywords: 'lead enrichment, business audit, workflow automation, enterprise AI, prospect intelligence',
 }
 
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
+      <body className={manrope.className} suppressHydrationWarning>
         {children}
       </body>
     </html>

@@ -30,7 +30,7 @@ import { v4 as uuidv4 } from 'uuid';
  * @example
  * const workflow = new WorkflowService();
  * workflow.registerStatusCallback(id, (status) => console.log(status));
- * const report = await workflow.executeWorkflow(leadData);
+ * const report = await workflow.executeWorkflow(leadData, workflowId);
  */
 export class WorkflowService {
   private statusCallbacks: Map<string, (status: WorkflowStatus) => void> = new Map();
@@ -76,8 +76,7 @@ export class WorkflowService {
    * @returns Promise with final report data
    * @throws Error if critical steps fail (scraping, AI analysis)
    */
-  async executeWorkflow(lead: LeadFormData): Promise<ReportData> {
-    const workflowId = uuidv4();
+  async executeWorkflow(lead: LeadFormData, workflowId: string = uuidv4()): Promise<ReportData> {
     const reportId = `REPORT_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     let pdfPath: string;
 

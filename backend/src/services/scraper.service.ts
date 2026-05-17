@@ -232,7 +232,7 @@ export class ScraperService {
             return null;
           }
         }).filter(Boolean);
-      })()`);
+      })()`) as any[];
 
       return {
         ...data,

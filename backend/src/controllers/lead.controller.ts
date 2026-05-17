@@ -176,7 +176,7 @@ export class LeadController {
     }
   }
 
-  async healthCheck(req: Request, res: Response): Promise<void> {
+  async healthCheck(_req: Request, res: Response): Promise<void> {
     res.status(200).json({
       success: true,
       message: 'API is running',

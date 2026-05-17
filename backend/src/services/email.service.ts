@@ -52,6 +52,17 @@ export class EmailService {
           user: config.smtp.user,
           pass: config.smtp.password,
         },
+        // Add timeout and connection options for cloud platforms
+        connectionTimeout: 10000, // 10 seconds
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
+        // Force TLS if not using secure
+        requireTLS: !config.smtp.secure,
+        // Additional options for better compatibility
+        tls: {
+          rejectUnauthorized: false, // Allow self-signed certificates
+          minVersion: 'TLSv1.2',
+        },
       });
 
       // Verify SMTP connection before marking as initialized
